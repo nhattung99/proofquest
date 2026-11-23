@@ -1,5 +1,6 @@
 .env*
 .git/
+.vercel/
 .next/
 .next-production/
 node_modules/
