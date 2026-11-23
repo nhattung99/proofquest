@@ -12,3 +12,8 @@ ol.journey,ol.live-timeline,section.explainer ol{list-style-type:none}ol.journey
 
 /* Fit the action on short desktop CSS viewports, including common zoom sizes. */
 @media(min-width:801px) and (max-height:850px){.site-header{height:58px}.hero{padding:18px 0 16px;gap:30px}.hero h1{font-size:48px;letter-spacing:-2.5px;margin:12px 0}.hero-description{font-size:12px;line-height:1.5;max-width:410px}.hero-tags{margin-top:12px}.proof-visual{height:180px}.floating-label{top:13px}.visual-result{bottom:12px;padding-top:10px}.journey{margin-bottom:12px}.quest-card-main{padding-top:20px;padding-bottom:17px}.quest-content{padding-top:20px;padding-bottom:20px}.setup-text{min-height:0;margin:8px 0 10px}.privacy-note{margin-top:10px}}
+
+/* Recovery controls stay accessible even after a successful SDK handshake. */
+.install-link{display:inline-block;font-size:12px;margin:3px 0 3px 8px;color:#ff8533;text-decoration:underline}.receipt-preview,.budget-note{margin:12px 24px;font-size:12px;color:#aaa;line-height:1.6}.receipt-preview summary{cursor:pointer}.retry-countdown{font-variant-numeric:tabular-nums;color:#ffb577}.error-callout a{color:inherit;text-decoration:underline}
+
+.receipt-preview dl{display:grid;grid-template-columns:minmax(100px,1fr) 2fr;gap:6px 16px}.receipt-preview dd{margin:0;overflow-wrap:anywhere}

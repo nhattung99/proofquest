@@ -33,3 +33,9 @@ Public verification preparation (not deployed): lint/typecheck passed; 78 unit, 
 
 
 Public release, 2026-11-23: e114cff passed GitHub CI and Vercel READY. Real production Redis checks passed session isolation, atomic take (one malformed-payload error plus one replay error under concurrency), 429/cooldown/Retry-After and Origin 403. Primus recognized the configured project with quota available. The user confirmed real public VERIFIED, all four journey checks, and receipt at 21:59:13 Asia/Saigon. This satisfies the public E2E check for that run, distinct from 12 passing public UI fixtures. A compact desktop follow-up adds 1438x789, 1150x631 and 1024x600 button-visibility cases after the user's remaining below-fold report.
+
+
+### Feedback regression coverage (2026-11-24)
+
+Added route/store coverage for cancellation consuming only its own attempt, cross-session cancellation leaving the owner's cooldown intact, cooldown refusals not spending the hourly request allowance, safe Retry-After/reset metadata, and cooldown release preserving the hard abuse cap. Browser transport fixtures cover a marker without an initialization handshake, no extension acknowledgement, an acknowledged but stuck flow, cancellation during signing and attestation, clean SDK reset, persisted rate countdown, truthful journey steps and an always-visible install link. These fixtures never represent a mock attestation as a successful real proof. A new genuine Chrome/Primus run remains a manual acceptance check after release; previous public proof evidence is historical.
+`npm run lint`, TypeScript production build, 80 unit/route/store tests and 20 browser checks passed for this update. Browser acceptance includes 1438×789, 1150×631, 1024×600 and mobile 390px.

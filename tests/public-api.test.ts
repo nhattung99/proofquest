@@ -3,6 +3,7 @@ import { NextRequest } from 'next/server';
 import { GET as config } from '../app/api/poc/config/route';
 import { POST as sign } from '../app/api/poc/request/route';
 import { POST as verify } from '../app/api/poc/verify/route';
+import { POST as cancel } from '../app/api/poc/cancel/route';
 import { sessionCookieName } from '../lib/verification-context';
 import { LIMIT_SCRIPT, TAKE_SCRIPT } from '../lib/verification-store';
 
@@ -24,6 +25,7 @@ beforeEach(() => {
   vi.stubGlobal('fetch', vi.fn(async (_url: string, options: RequestInit) => {
     calls++;
     const args = JSON.parse(String(options.body));
+    if (args[0] === 'DEL') { state.delete(args[1]); return Response.json({ result: 1 }); }
     if (args[0] === 'SET') { state.set(args[1], args[2]); return Response.json({ result: 'OK' }); }
     if (args[1] === LIMIT_SCRIPT) {
       const count = Number(state.get(args[3]) ?? 0) + 1; state.set(args[3], String(count));
@@ -81,5 +83,23 @@ it('returns a friendly 429 and Retry-After before issuing a second request insid
   const limited = await sign(req('/api/poc/request', 'POST', cookie));
   expect(limited.status).toBe(429);
   expect(limited.headers.get('Retry-After')).toBe('30');
-  expect(await limited.json()).toEqual({ code: 'PQ_RATE_LIMIT' });
+  expect(await limited.json()).toMatchObject({ code: 'PQ_RATE_LIMIT', retryAfter: 30, resetAt: expect.any(Number) });
+  const hourly = [...state.entries()].filter(([key]) => key.includes(':request:'));
+  expect(hourly.every(([, count]) => count === '1')).toBe(true);
+});
+
+it('cancellation allows a fresh request, consumes the old attempt and cannot clear another session cooldown', async () => {
+  const configured = await config(req('/api/poc/config'));
+  const session = configured.cookies.get(sessionCookieName)!.value;
+  const owner = `${sessionCookieName}=${session}`;
+  const signed = await sign(req('/api/poc/request', 'POST', owner));
+  expect(await signed.clone().json()).toMatchObject({ rateLimit: { remaining: 29, resetAt: expect.any(Number) } });
+  const token = signed.cookies.get('proofquest_poc')!.value;
+  const other = `${sessionCookieName}=${'e'.repeat(64)}; proofquest_poc=${token}`;
+  expect((await cancel(req('/api/poc/cancel', 'POST', other))).status).toBe(200);
+  expect((await sign(req('/api/poc/request', 'POST', owner))).status).toBe(429);
+  const cookie = `${owner}; proofquest_poc=${token}`;
+  expect((await cancel(req('/api/poc/cancel', 'POST', cookie))).status).toBe(200);
+  expect(await (await verify(req('/api/poc/verify', 'POST', cookie))).json()).toMatchObject({ code: 'PQ_ATTEMPT' });
+  expect((await sign(req('/api/poc/request', 'POST', owner))).status).toBe(200);
 });

@@ -13,7 +13,7 @@ it('enforces independent rate buckets and expiry', async () => {
   const store = new MemoryVerificationStore();
   await store.limit('ip', 1, 3600);
   await expect(store.limit('ip', 1, 3600)).rejects.toMatchObject({ code: 'PQ_RATE_LIMIT', status: 429 });
-  await expect(store.limit('other-ip', 1, 3600)).resolves.toBeUndefined();
+  await expect(store.limit('other-ip', 1, 3600)).resolves.toMatchObject({ remaining: 0 });
 });
 it('uses a single authenticated atomic EVAL for session-bound consume', async () => {
   const fetcher = vi.fn().mockResolvedValue(Response.json({ result: JSON.stringify(attempt) }));
@@ -35,4 +35,13 @@ it('returns safe hourly retry metadata from Redis limiter', async () => {
   vi.stubGlobal('fetch', vi.fn().mockResolvedValue(Response.json({ result: [6, 3000] })));
   const store = new RedisVerificationStore('https://example.upstash.io', 'synthetic-token', 'test');
   await expect(store.limit('session', 5, 3600)).rejects.toMatchObject({ code: 'PQ_RATE_LIMIT', retryAfter: 3000 });
+});
+
+it('releases only the short cooldown, preserving the abuse budget', async () => {
+  const store = new MemoryVerificationStore();
+  await store.limit('cooldown:owner', 1, 30);
+  await store.limit('session:request:owner', 1, 3600);
+  await store.clearCooldown('owner');
+  await expect(store.limit('cooldown:owner', 1, 30)).resolves.toMatchObject({ remaining: 0 });
+  await expect(store.limit('session:request:owner', 1, 3600)).rejects.toMatchObject({ code: 'PQ_RATE_LIMIT' });
 });

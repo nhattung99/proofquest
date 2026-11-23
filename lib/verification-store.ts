@@ -5,10 +5,12 @@ export class ServiceError extends Error {
   constructor(public code: string, public status: number, public retryAfter = 0) { super(code); }
 }
 export type StoredAttempt = Attempt & { sessionHash: string };
+export type RateWindow = { remaining: number; resetAt: number };
 export interface VerificationStore {
   save(token: string, attempt: StoredAttempt): Promise<void>;
   take(token: string, sessionHash: string): Promise<StoredAttempt | null>;
-  limit(key: string, maximum: number, seconds: number): Promise<void>;
+  limit(key: string, maximum: number, seconds: number): Promise<RateWindow>;
+  clearCooldown(sessionHash: string): Promise<void>;
 }
 // One Lua command owns the session comparison and consume. No GET/DEL race.
 export const TAKE_SCRIPT = `local raw=redis.call('GET',KEYS[1]); if not raw then return nil end; local a=cjson.decode(raw); if a.sessionHash~=ARGV[1] then return nil end; redis.call('DEL',KEYS[1]); return raw`;
@@ -45,7 +47,9 @@ export class RedisVerificationStore implements VerificationStore {
     const result = z.tuple([z.number(), z.number()]).safeParse(raw);
     if (!result.success) throw new ServiceError('PQ_STORAGE', 503);
     if (result.data[0] > maximum) throw new ServiceError('PQ_RATE_LIMIT', 429, Math.max(1, result.data[1]));
+    return { remaining: maximum - result.data[0], resetAt: Date.now() + Math.max(1, result.data[1]) * 1000 };
   }
+  async clearCooldown(sessionHash: string) { await this.command(['DEL', `${this.prefix}:limit:cooldown:${sessionHash}`]); }
 }
 
 // Local development only. Public configuration never falls back to this store.
@@ -68,7 +72,9 @@ export class MemoryVerificationStore implements VerificationStore {
     const value = this.counters.get(key) ?? { count: 0, expires: now + seconds * 1000 };
     value.count++; this.counters.set(key, value);
     if (value.count > maximum) throw new ServiceError('PQ_RATE_LIMIT', 429, Math.max(1, Math.ceil((value.expires - now) / 1000)));
+    return { remaining: maximum - value.count, resetAt: value.expires };
   }
+  async clearCooldown(sessionHash: string) { this.counters.delete(`cooldown:${sessionHash}`); }
 }
 const state = globalThis as typeof globalThis & { proofquestLocalStore?: MemoryVerificationStore };
 export function verificationStore(publicMode: boolean, namespace: string) {

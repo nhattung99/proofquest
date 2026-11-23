@@ -55,15 +55,19 @@ export function setSession(response: NextResponse, ctx: VerificationContext) {
   response.cookies.set(sessionCookieName, ctx.session, { httpOnly: true, secure: ctx.secure, sameSite: 'strict', path: '/api/poc', maxAge: 3600 });
 }
 export async function rateLimit(ctx: VerificationContext, action: 'config' | 'request' | 'verify' | 'cancel') {
-  const limits = { config: [120, 120], request: [5, 15], verify: [30, 60], cancel: [30, 60] } as const;
+  // Request caps are abuse protection, not proof credits. Cooldown refusals
+  // must not consume the hourly allowance. Cancellation releases only the
+  // session cooldown, never the hard abuse cap.
+  const limits = { config: [120, 120], request: [30, 60], verify: [30, 60], cancel: [120, 180] } as const;
   const [sessionLimit, ipLimit] = limits[action];
-  await ctx.store.limit(`ip:${action}:${ctx.ipHash}`, ipLimit, 3600);
-  await ctx.store.limit(`session:${action}:${ctx.sessionHash}`, sessionLimit, 3600);
   if (action === 'request') await ctx.store.limit(`cooldown:${ctx.sessionHash}`, 1, 30);
+  const ip = await ctx.store.limit(`ip:${action}:${ctx.ipHash}`, ipLimit, 3600);
+  const session = await ctx.store.limit(`session:${action}:${ctx.sessionHash}`, sessionLimit, 3600);
+  return session.remaining <= ip.remaining ? session : ip;
 }
 export function apiError(error: unknown, fallback: string) {
   const service = error instanceof ServiceError ? error : null;
-  const response = NextResponse.json({ code: service?.code ?? fallback }, { status: service?.status ?? (fallback === 'PQ_CONFIG' ? 503 : 400), headers: { 'Cache-Control': 'no-store' } });
+  const response = NextResponse.json({ code: service?.code ?? fallback, ...(service?.retryAfter ? { retryAfter: service.retryAfter, resetAt: Date.now() + service.retryAfter * 1000 } : {}) }, { status: service?.status ?? (fallback === 'PQ_CONFIG' ? 503 : 400), headers: { 'Cache-Control': 'no-store' } });
   if (service?.retryAfter) response.headers.set('Retry-After', String(service.retryAfter));
   return response;
 }

@@ -6,7 +6,8 @@ export async function POST(request: NextRequest) {
   try {
     const ctx = context(request);
     await rateLimit(ctx, 'cancel');
-    await ctx.store.take(request.cookies.get(cookieName)?.value ?? '', ctx.sessionHash);
+    const attempt = await ctx.store.take(request.cookies.get(cookieName)?.value ?? '', ctx.sessionHash);
+    if (attempt) await ctx.store.clearCooldown(ctx.sessionHash);
     const response = NextResponse.json({ cancelled: true }, { headers: { 'Cache-Control': 'no-store' } });
     response.cookies.set(cookieName, '', { httpOnly: true, secure: ctx.secure, sameSite: 'strict', path: '/api/poc', maxAge: 0 });
     return response;

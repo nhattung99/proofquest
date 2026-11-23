@@ -37,14 +37,14 @@ export function verifyPayload(attempt: Attempt, input: unknown) {
   if (new PrimusZKTLS().verifyAttestation(attestation) !== true) throw new Error('Invalid Primus signature');
   checkBinding(attestation, attempt);
   // Eligibility is mandatory. Authenticity alone must never display quest success.
-  checkQuest(attestation);
+  const screenName = checkQuest(attestation);
   // Fingerprint the verified payload and signature, not unsigned attestor metadata.
   const hash = createHash('sha256').update(JSON.stringify([
     attestation.recipient, attestation.request, attestation.reponseResolve,
     attestation.data, attestation.attConditions, attestation.timestamp,
     attestation.additionParams, attestation.signatures,
   ])).digest('hex');
-  return { quest: X_QUEST.title, authenticity: true, attemptBinding: true, questPolicy: 'passed supported checks', resolverParseTypePinned: false, templateIdentity: 'request pinned; output has no template ID', walletAuthenticated: false, rewardsEnabled: false, timestamp: attestation.timestamp, attestationHash: `0x${hash}` };
+  return { screenName, quest: X_QUEST.title, authenticity: true, attemptBinding: true, questPolicy: 'passed supported checks', resolverParseTypePinned: false, templateIdentity: 'request pinned; output has no template ID', walletAuthenticated: false, rewardsEnabled: false, timestamp: attestation.timestamp, attestationHash: `0x${hash}` };
 }
 export async function readLimitedJson(request: Request) {
   if (!request.headers.get('content-type')?.startsWith('application/json')) throw new Error('Expected JSON');
