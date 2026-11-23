@@ -1,14 +1,14 @@
-import { NextResponse } from 'next/server';
-import { cookieName, guard, issueAttempt } from '../../../../lib/poc';
+import { NextRequest, NextResponse } from 'next/server';
+import { cookieName, issueAttempt } from '../../../../lib/poc';
+import { apiError, context, rateLimit } from '../../../../lib/verification-context';
 export const runtime = 'nodejs';
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
-    guard(request);
-    const { token, signedRequest } = await issueAttempt();
+    const ctx = context(request);
+    await rateLimit(ctx, 'request');
+    const { token, signedRequest } = await issueAttempt(ctx);
     const response = NextResponse.json({ signedRequest }, { headers: { 'Cache-Control': 'no-store' } });
-    response.cookies.set(cookieName, token, { httpOnly: true, sameSite: 'strict', path: '/api/poc', maxAge: 300 });
+    response.cookies.set(cookieName, token, { httpOnly: true, secure: ctx.secure, sameSite: 'strict', path: '/api/poc', maxAge: 300 });
     return response;
-  } catch {
-    return NextResponse.json({ code: 'PQ_REQUEST_REJECTED' }, { status: 400, headers: { 'Cache-Control': 'no-store' } });
-  }
+  } catch (error) { return apiError(error, 'PQ_REQUEST_REJECTED'); }
 }

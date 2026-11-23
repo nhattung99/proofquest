@@ -27,3 +27,6 @@ Live resolution on 2026-11-23: v2 diagnostics showed REVEAL_STRING, field $.scre
 
 
 Final confirmation: the user observed the genuine green VERIFIED badge, all four journey ticks and SHA-256 receipt at 18:24:04 Asia/Saigon on 2026-11-23, matching the live backend HTTP 200. No PQ_CONDITIONS or silent reset occurred on that run. Final production build passed and production browser fixtures passed 9/9. These UI fixtures remain distinct from the separate genuine user confirmation. No real replay/cross-wallet negative test has been claimed.
+
+
+Public verification preparation (not deployed): lint/typecheck passed; 78 unit, public-route and storage-contract tests passed; 12 local production Playwright tests passed. Direct localhost HTTP session tests rejected cross-session use, malformed proof and consumed replay. The current Primus appSecret was not found in scanned client chunks. No new actual Redis or public Primus E2E test was run: storage credentials and deployment approval are pending. The attestation policy itself was not changed. See PUBLIC_VERIFICATION.md for the exact setup and required live checks.

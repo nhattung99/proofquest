@@ -6,3 +6,6 @@
 
 /* Explicit marker reset and text blocks for consistent browser rendering. */
 ol.journey,ol.live-timeline,section.explainer ol{list-style-type:none}ol.journey>li::marker,ol.live-timeline>li::marker,section.explainer li::marker{content:""}.requirements small{display:block}.site-header{position:relative;overflow:visible;flex-shrink:0}.brand-icon{flex-shrink:0}.requirements>div>span:last-child{display:block}
+
+@media(min-width:1000px){.hero{padding-top:26px;padding-bottom:18px}.proof-visual{height:215px}.hero h1{font-size:59px}.journey{margin-bottom:12px}.quest-card-main{padding-top:20px;padding-bottom:17px}.quest-content{padding-top:18px;padding-bottom:20px}}
+.card-bottom details[open]{flex:1 1 360px;max-width:none;min-width:0;text-align:left}.card-bottom details[open] p{white-space:normal;overflow:visible;overflow-wrap:anywhere;word-break:normal}.card-bottom:has(details[open]){flex-wrap:wrap}.card-bottom details summary{line-height:1.7}

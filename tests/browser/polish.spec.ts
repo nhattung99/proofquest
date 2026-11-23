@@ -55,7 +55,7 @@ test('cancellation during signing ignores late response and revokes attempt', as
   await page.getByRole('button', { name: 'Generate real proof' }).click();
   await expect(page.getByRole('button', { name: 'Verification in progress…' })).toBeDisabled();
   await page.getByRole('button', { name: 'Cancel verification' }).click();
-  await expect(page.locator('.cancel-notice')).toContainText('cancelled locally');
+  await expect(page.locator('.cancel-notice')).toContainText('cancelled');
   await expect(page.getByRole('button', { name: 'Generate real proof' })).toBeEnabled();
   expect(revocations).toBeGreaterThanOrEqual(1);
   await expect(page.locator('.error-callout')).toHaveCount(0);
@@ -77,10 +77,25 @@ test('an interrupted page reload surfaces an explicit error instead of silent id
   await expect(page.locator('.error-callout')).toContainText('PQ_INTERRUPTED');
   await expect(page.locator('.error-callout')).toContainText('page reloaded');
 });
-test('public preview explains local-only verification without requesting credentials', async ({ page }) => {
-  await page.route('**/api/poc/config', route => route.fulfill({ status: 503, json: { code: 'PQ_LOCAL_ONLY' } }));
+test('unconfigured public verification explains service setup without local-only copy', async ({ page }) => {
+  await page.route('**/api/poc/config', route => route.fulfill({ status: 503, json: { code: 'PQ_CONFIG' } }));
   await page.goto('/');
-  await expect(page.getByRole('button', { name: 'Local verification only' })).toBeDisabled();
-  await expect(page.locator('.setup-text')).toContainText('Public preview');
-  await expect(page.locator('.setup-text')).not.toContainText('.env.local');
+  await expect(page.getByRole('button', { name: 'Generate real proof' })).toBeDisabled();
+  await expect(page.locator('.setup-text')).toContainText('not configured');
+  await expect(page.locator('body')).not.toContainText('Local verification only');
+});
+test('expanded technical details wrap fully on mobile', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await ready(page);
+  await page.getByText('Technical details', { exact: true }).click();
+  await expect(page.locator('.card-bottom details p')).toContainText('Signing secrets stay on the server.');
+  expect(await page.locator('.card-bottom details p').evaluate(element => element.scrollWidth <= element.clientWidth)).toBe(true);
+});
+
+test('rate-limit rejection shows a friendly message instead of a raw error', async ({ page }) => {
+  await ready(page);
+  await page.route('**/api/poc/request', route => route.fulfill({ status: 429, headers: { 'Retry-After': '3600' }, json: { code: 'PQ_RATE_LIMIT' } }));
+  await page.getByRole('button', { name: 'Generate real proof' }).click();
+  await expect(page.locator('.error-callout')).toContainText('Too many attempts');
+  await expect(page.locator('.error-callout')).toContainText('Wait for the rate limit to reset');
 });

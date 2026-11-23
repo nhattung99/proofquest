@@ -56,10 +56,15 @@ Development: `npm run dev` at port 3000. Local production QA can run separately 
 See [fix and polish report](docs/FIX_AND_POLISH.md) for evidence, changed files and limitations.
 
 
-## GitHub and Vercel public preview
+## Currently deployed release (before public-verification approval)
 
 The public Vercel deployment is a presentation preview. Real proof generation remains available only in the local harness; the public verification button is disabled and no Primus credentials are uploaded. Vercel route handlers explicitly refuse proof operations even if credentials were added accidentally. Rewards/claims remain disabled.
 
 No Vercel environment variables are required for the preview. Do not upload .env.local or add PRIMUS_APP_SECRET to this preview project. A functional public proof service requires durable authenticated attempts and serverless-safe persistence before enabling those routes. .vercelignore excludes environment files, downloaded research, generated builds and test artifacts.
 
 GitHub CI runs lint, typecheck, synthetic unit tests and a production build; it does not claim to run a genuine X proof. MIT license covers ProofQuest source; Primus SDK and other dependencies retain their respective licenses.
+
+
+## Public verification preparation (not yet deployed)
+
+The working tree now prepares real public verification with shared Redis attempts, anonymous session binding, exact-origin checks and per-session/IP rate limits. The deployed site is unchanged pending explicit approval; do not push main before release because Vercel is Git-connected. See [public verification setup](docs/PUBLIC_VERIFICATION.md) for the eight required Vercel variables, Primus dashboard notes, testing and remaining limitations. No Primus verification rule or reward gate was removed.

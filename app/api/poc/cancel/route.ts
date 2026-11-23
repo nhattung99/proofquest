@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { cancelAttempt, cookieName, guard } from '../../../../lib/poc';
+import { cookieName } from '../../../../lib/poc';
+import { apiError, context, rateLimit } from '../../../../lib/verification-context';
 export const runtime = 'nodejs';
 export async function POST(request: NextRequest) {
   try {
-    guard(request);
-    cancelAttempt(request.cookies.get(cookieName)?.value ?? '');
+    const ctx = context(request);
+    await rateLimit(ctx, 'cancel');
+    await ctx.store.take(request.cookies.get(cookieName)?.value ?? '', ctx.sessionHash);
     const response = NextResponse.json({ cancelled: true }, { headers: { 'Cache-Control': 'no-store' } });
-    response.cookies.set(cookieName, '', { httpOnly: true, sameSite: 'strict', path: '/api/poc', maxAge: 0 });
+    response.cookies.set(cookieName, '', { httpOnly: true, secure: ctx.secure, sameSite: 'strict', path: '/api/poc', maxAge: 0 });
     return response;
-  } catch { return NextResponse.json({ code: 'PQ_REQUEST_REJECTED' }, { status: 400 }); }
+  } catch (error) { return apiError(error, 'PQ_REQUEST_REJECTED'); }
 }

@@ -1,6 +1,10 @@
 // Never display arbitrary SDK/server messages: they may contain account data.
 const safeMessages: Record<string, string> = {
-  PQ_LOCAL_ONLY: 'Public preview. Real verification is available in the local builder environment; public claims are disabled.',
+  PQ_CONFIG: 'Verification is not configured yet. Please contact the developer.',
+  PQ_SESSION: 'Your verification session expired. Reload the page and try again.',
+  PQ_ORIGIN: 'Verification must be started on the configured ProofQuest website.',
+  PQ_STORAGE: 'Verification service is temporarily unavailable. Please try again later.',
+  PQ_RATE_LIMIT: 'Too many attempts. Please wait before trying again; the hourly proof limit protects the shared quota.',
   '00006': 'Primus extension is missing. Install it, enable it, then reload.',
   '00004': 'Verification cancelled. You can start a new attempt.',
   '00012': 'Template unavailable. Confirm its ID and access in Developer Hub.',
@@ -16,7 +20,7 @@ const safeMessages: Record<string, string> = {
   '30001:403': 'X blocked the request. Wait before retrying.',
   '30001:429': 'X rate limit reached. Wait before retrying.',
   '30004': 'Primus could not parse the X response. Check login and template availability.',
-  PQ_REQUEST_REJECTED: 'Server refused the request. Check local configuration and wait 30 seconds before retrying.',
+  PQ_REQUEST_REJECTED: 'Server refused the request. Please wait 30 seconds and try again, or contact the developer.',
   PQ_PROOF_REJECTED: 'Server rejected the proof.',
   PQ_PAYLOAD: 'Attestation shape was rejected. Do not share the raw proof.',
   PQ_SIGNATURE: 'Official Primus signature verification failed.',

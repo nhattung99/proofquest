@@ -1,14 +1,14 @@
-import { configuration, guard } from '../../../../lib/poc';
+import { NextRequest, NextResponse } from 'next/server';
+import { configuration } from '../../../../lib/poc';
+import { apiError, context, rateLimit, setSession } from '../../../../lib/verification-context';
 export const runtime = 'nodejs';
-export async function GET(request: Request) {
-  if (process.env.VERCEL === '1' || !['localhost', '127.0.0.1'].includes(new URL(request.url).hostname)) {
-    return Response.json({ code: 'PQ_LOCAL_ONLY' }, { status: 503, headers: { 'Cache-Control': 'no-store' } });
-  }
+export async function GET(request: NextRequest) {
   try {
-    guard(request);
     const { appId, templateId, recipient } = configuration();
-    return Response.json({ appId, templateId, recipient }, { headers: { 'Cache-Control': 'no-store' } });
-  } catch {
-    return Response.json({ error: 'Local experiment needs configuration. Follow README.md and .env.example.' }, { status: 503 });
-  }
+    const ctx = context(request, true);
+    await rateLimit(ctx, 'config');
+    const response = NextResponse.json({ appId, templateId, recipient }, { headers: { 'Cache-Control': 'no-store' } });
+    setSession(response, ctx);
+    return response;
+  } catch (error) { return apiError(error, 'PQ_CONFIG'); }
 }
