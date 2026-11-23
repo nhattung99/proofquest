@@ -2,7 +2,9 @@
 
 Verify Actions. Earn Trust. Unlock Rewards.
 
-Independent community project exploring Primus zkTLS for verifiable quests. **Current state: Phase 0 research plus a local Phase 1 proof harness. A genuine X proof passed the local backend on 2026-11-23; wallet authentication and durable claims remain pending. No rewards, dashboard, wallet authentication, database, or deployment is implemented.**
+Independent community experiment verifying X account ownership with the official Primus zkTLS SDK. **Public verification is enabled at [proofquest-nu.vercel.app](https://proofquest-nu.vercel.app/), with Redis-backed one-time attempts and browser-session binding. A genuine public proof was user-confirmed on 2026-11-23. Wallet authentication and reward claims remain disabled.**
+
+[Source code](https://github.com/nhattung99/proofquest) · [Public verification setup](docs/PUBLIC_VERIFICATION.md)
 
 ## Run on Windows
 
@@ -40,10 +42,11 @@ npm run test:e2e
 
 See [research](docs/PRIMUS_RESEARCH.md), [integration](docs/PRIMUS_INTEGRATION.md), [security](docs/SECURITY.md), and [test status](docs/TESTING.md). Downloaded upstream repositories under `research/` are ignored; their revisions are recorded in the research document. No upstream setup/install scripts were executed.
 
-## Release gate
+## Release status and remaining gates
 
-Do not deploy this harness publicly. It intentionally rejects non-local hosts, has no durable sessions, and does not authenticate wallet ownership. The planned repository is `https://github.com/nhattung99/proofquest`; its existence and publication are unverified. Full frontend/backend phases, Supabase, wagmi/viem, Tailwind/shadcn, reward transactions and Vercel release preparation begin only after a real attestation passes the acceptance checklist. Publishing requires user confirmation.
+The approved public Vercel release supports real X verification through the Primus extension. Configure the required server-only variables and shared Redis before enabling public mode; local mode alone uses in-memory state. The deployed Redis path has passed live session, atomic-consume, replay, cooldown and origin-negative checks. The user confirmed a real public VERIFIED receipt. Anonymous session binding does not authenticate wallet ownership or unique humanity; no rewards/claims are implemented.
 
+Changes to main auto-deploy through Vercel. Publishing still requires the owner's authorization. Full wallet auth, identity policy, atomic reward ledger and further dashboard work remain separate milestones.
 
 ## Fix and polish follow-up
 
@@ -56,15 +59,8 @@ Development: `npm run dev` at port 3000. Local production QA can run separately 
 See [fix and polish report](docs/FIX_AND_POLISH.md) for evidence, changed files and limitations.
 
 
-## Currently deployed release (before public-verification approval)
+## Public deployment
 
-The public Vercel deployment is a presentation preview. Real proof generation remains available only in the local harness; the public verification button is disabled and no Primus credentials are uploaded. Vercel route handlers explicitly refuse proof operations even if credentials were added accidentally. Rewards/claims remain disabled.
+The site uses server-side Primus request signing, shared Redis attempts, Secure/HttpOnly/SameSite cookies, exact-origin checks and per-IP/session limits. appSecret and Redis credentials are never shipped to the client. Do not upload .env.local. See [setup, quotas and security limits](docs/PUBLIC_VERIFICATION.md).
 
-No Vercel environment variables are required for the preview. Do not upload .env.local or add PRIMUS_APP_SECRET to this preview project. A functional public proof service requires durable authenticated attempts and serverless-safe persistence before enabling those routes. .vercelignore excludes environment files, downloaded research, generated builds and test artifacts.
-
-GitHub CI runs lint, typecheck, synthetic unit tests and a production build; it does not claim to run a genuine X proof. MIT license covers ProofQuest source; Primus SDK and other dependencies retain their respective licenses.
-
-
-## Public verification preparation (not yet deployed)
-
-The working tree now prepares real public verification with shared Redis attempts, anonymous session binding, exact-origin checks and per-session/IP rate limits. The deployed site is unchanged pending explicit approval; do not push main before release because Vercel is Git-connected. See [public verification setup](docs/PUBLIC_VERIFICATION.md) for the eight required Vercel variables, Primus dashboard notes, testing and remaining limitations. No Primus verification rule or reward gate was removed.
+GitHub CI checks lint, TypeScript, synthetic unit tests and the production build. Browser fixtures are separate from the user-confirmed genuine public X proof. The MIT license covers ProofQuest source; dependencies retain their own licenses.

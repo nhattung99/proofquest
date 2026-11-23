@@ -1,6 +1,6 @@
-# Public X verification — prepared, not deployed
+# Public X verification — deployed
 
-This change removes the public-preview-only gate and prepares the existing real Primus X flow for Vercel. **It has not been pushed or deployed.** Pushing main currently triggers Vercel, so publication must wait for the owner's explicit confirmation. The existing public deployment remains unchanged until then.
+Public verification is enabled at https://proofquest-nu.vercel.app after the owner's explicit push/deploy approval. Application commit e114cff passed CI and Vercel reached READY. Live Redis/session/rate-limit checks passed, and the user confirmed a genuine public X VERIFIED receipt. Further main-branch pushes auto-deploy, so release changes still require owner authorization.
 
 ## Required Vercel configuration
 
@@ -50,7 +50,7 @@ The inspected official SDK and production example do not require a localhost dom
 
 The server uses the official SDK's local cryptographic verifyAttestation method; there is no invented HTTP signature-verification endpoint. Server signing is also local SDK cryptography after init with credentials. The SDK/browser/Primus extension handles the official Primus quota and proof-generation network calls. The only new outbound server dependency is HTTPS Redis REST. No server request is made to a localhost verification service. Localhost checks remain solely in the explicit local-development branch.
 
-Actual Redis connectivity from Vercel and production Primus quota/template access cannot be verified until credentials are configured and an approved deployment exists.
+Live Vercel configuration/signing and Redis scripts were verified on the approved deployment. The public Primus quota lookup recognized the project and reported available quota. The user then confirmed a genuine public X proof and receipt. No HTTP signature-verification endpoint was invented.
 
 ## Release/test procedure
 
@@ -58,7 +58,7 @@ Actual Redis connectivity from Vercel and production Primus quota/template acces
 2. Review this change and explicitly authorize push/deploy. Only then publish, wait for build READY and open the canonical production URL.
 3. Check /api/poc/config returns public appId/template/recipient with no secret, no-store headers and a Secure/HttpOnly session cookie. Missing configuration must return 503; no local-only/public-preview message should remain.
 4. In desktop Chrome/Edge with Primus enabled for this site, click Generate real proof and complete X authentication through Primus. Expect green VERIFIED, the four completed steps, and a SHA-256 receipt only after server acceptance. Never share raw proofs, passwords or cookies.
-5. Confirm browser B cannot reuse browser A's attempt, consumed attempts cannot be retried, wrong/expired challenges fail, and repeated signing within cooldown returns 429 with Retry-After. Do not weaken checks to satisfy the test. Real Redis concurrency and these cross-browser checks remain mandatory staging validation.
+5. Confirm browser B cannot reuse browser A's attempt, consumed attempts cannot be retried, wrong/expired challenges fail, and repeated signing within cooldown returns 429 with Retry-After. Do not weaken checks to satisfy the test. The initial release passed a live concurrent malformed-payload consume test and cross-session rejection; repeat these checks for security-sensitive future changes.
 6. Check browser bundles/API responses for secrets, inspect redacted service errors only, verify desktop 1438x789 and mobile 390px including expanded Technical details. Rewards wording stays unchanged and claims remain off.
 
 ## Prepared files
@@ -80,18 +80,14 @@ Actual Redis connectivity from Vercel and production Primus quota/template acces
 - tests/browser/poc.spec.ts / polish.spec.ts — public-ready/config/rate-message/desktop/mobile detail checks.
 - README.md, docs/SECURITY.md, docs/TESTING.md, docs/PUBLIC_VERIFICATION.md — current preparation status, environment audit and release procedure.
 
-## Validation limits
+## Production validation and genuine proof evidence
 
-The passing genuine local proof from 2026-11-23 established the underlying Primus verifier/policy. This change has not generated a new genuine public proof. Redis HTTP fixtures test the adapter contract and routing, not execution of Lua on a real Redis server. No Redis service was created, no production variables were changed, and no push/deploy was performed for this change. Live shared Redis atomicity, Vercel header delivery, any private Primus dashboard restriction and public end-to-end proof generation await configured staging and explicit release approval.
+- Live home and config returned 200; signing returned 200 with Secure/HttpOnly session cookies.
+- A different session could not consume the attempt (PQ_ATTEMPT).
+- Two concurrent malformed-payload verification requests returned exactly one PQ_PAYLOAD and one PQ_ATTEMPT, exercising the real Redis atomic take script. No invalid proof was accepted.
+- Immediate repeated signing returned 429/PQ_RATE_LIMIT with Retry-After; wrong Origin returned 403.
+- The official public Primus app-quote lookup recognized the project and showed available quota.
+- Lint, TypeScript and 78 unit/route/store tests passed. Initial deployed browser acceptance passed 12/12 (transport fixtures, not fake successful proofs). Additional short-viewport layout checks are included for the final layout follow-up.
+- A genuine public proof was user-confirmed on Chrome with Primus: VERIFIED, all four journey checkpoints, no error, receipt fingerprint `0xbed0ce67eacd9918662ca0a6fdaaf9f561fb7d367289e8640050d2ee339f43f4`, attested 2026-11-23 21:59:13 Asia/Saigon. No X username, password, cookie or raw proof is retained here.
 
-
-## Prepared validation results
-
-- Lint and TypeScript passed; 78 unit/route/store tests passed.
-- 12 local production browser tests passed, including above-fold action at 1438x789, 390px no-overflow, full expanded technical text, friendly 429, cancellation and interrupted-run recovery.
-- Local production build passed without Redis credentials being required at build time.
-- Direct local HTTP route exercise with real local application configuration: config 200, signing 200; wrong session PQ_ATTEMPT, own malformed payload PQ_PAYLOAD, reuse PQ_ATTEMPT. No X proof or quota-consuming Primus generation was invoked in this negative test.
-- Static client output scanned against the existing local Primus appSecret: no matching secret value found. Public config route tests also ensure appSecret and Redis token are absent from JSON responses.
-- Redis tests use explicit HTTP fixtures and local adapter contracts. No actual Redis/EVAL or new public proof success is claimed. Existing genuine local proof evidence remains separate.
-
-No push or deployment was performed. The owner's confirmation is still required before any main-branch push because Vercel auto-deploy is connected.
+The public proof is separate evidence from browser fixtures and negative backend tests. Anonymous sessions are not wallet ownership, stable X identity or unique-human authentication. Rewards/claims remain disabled. Lightweight rate limits are not a complete anti-bot system. Exact expected parseType and an explicit signed Hub-template-ID field remain outside the supported checks as previously documented. Secrets and production variables are not printed or checked into Git.

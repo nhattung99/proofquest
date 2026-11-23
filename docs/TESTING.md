@@ -30,3 +30,6 @@ Final confirmation: the user observed the genuine green VERIFIED badge, all four
 
 
 Public verification preparation (not deployed): lint/typecheck passed; 78 unit, public-route and storage-contract tests passed; 12 local production Playwright tests passed. Direct localhost HTTP session tests rejected cross-session use, malformed proof and consumed replay. The current Primus appSecret was not found in scanned client chunks. No new actual Redis or public Primus E2E test was run: storage credentials and deployment approval are pending. The attestation policy itself was not changed. See PUBLIC_VERIFICATION.md for the exact setup and required live checks.
+
+
+Public release, 2026-11-23: e114cff passed GitHub CI and Vercel READY. Real production Redis checks passed session isolation, atomic take (one malformed-payload error plus one replay error under concurrency), 429/cooldown/Retry-After and Origin 403. Primus recognized the configured project with quota available. The user confirmed real public VERIFIED, all four journey checks, and receipt at 21:59:13 Asia/Saigon. This satisfies the public E2E check for that run, distinct from 12 passing public UI fixtures. A compact desktop follow-up adds 1438x789, 1150x631 and 1024x600 button-visibility cases after the user's remaining below-fold report.

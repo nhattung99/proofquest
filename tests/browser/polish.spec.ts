@@ -99,3 +99,13 @@ test('rate-limit rejection shows a friendly message instead of a raw error', asy
   await expect(page.locator('.error-callout')).toContainText('Too many attempts');
   await expect(page.locator('.error-callout')).toContainText('Wait for the rate limit to reset');
 });
+
+for (const viewport of [{ width: 1438, height: 789 }, { width: 1150, height: 631 }, { width: 1024, height: 600 }]) {
+  test(`full primary action fits short desktop ${viewport.width}x${viewport.height}`, async ({ page }) => {
+    await page.setViewportSize(viewport);
+    await ready(page);
+    const button = await page.getByRole('button', { name: 'Generate real proof' }).boundingBox();
+    expect(button!.y).toBeGreaterThanOrEqual(0);
+    expect(button!.y + button!.height).toBeLessThan(viewport.height - 12);
+  });
+}
