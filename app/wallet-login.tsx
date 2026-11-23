@@ -18,6 +18,10 @@ function timeout<T>(work: Promise<T>) {
   let timer: ReturnType<typeof setTimeout>;
   return Promise.race([work, new Promise<never>((_, reject) => { timer = setTimeout(() => reject({ code: 'PQ_TIMEOUT' }), 60000); })]).finally(() => clearTimeout(timer));
 }
+function metaMask(preferred: Provider | null) {
+  const injected = (window as Window & { ethereum?: Provider & { providers?: Provider[] } }).ethereum;
+  return preferred ?? injected?.providers?.find(item => item.isMetaMask) ?? (injected?.isMetaMask ? injected : null);
+}
 export default function WalletLogin({ wallet, onChange, disabled }: { wallet: SignedInWallet | null; onChange(wallet: SignedInWallet | null): void; disabled: boolean }) {
   const [working, setWorking] = useState(false);
   const [notice, setNotice] = useState('');
@@ -35,7 +39,22 @@ export default function WalletLogin({ wallet, onChange, disabled }: { wallet: Si
     };
     window.addEventListener('eip6963:announceProvider', announced);
     window.dispatchEvent(new Event('eip6963:requestProvider'));
-    void api('session').then(value => { if (mounted && started === revision.current && walletShape(value)) change.current(value); }).catch(() => {});
+    void api('session').then(async value => {
+      if (!mounted || started !== revision.current || !walletShape(value)) return;
+      setWorking(true);
+      try {
+        const selected = metaMask(provider.current);
+        const accounts = selected ? await timeout(selected.request({ method: 'eth_accounts' })) : [];
+        const chain = selected ? await timeout(selected.request({ method: 'eth_chainId' })) : null;
+        if (!mounted || started !== revision.current) return;
+        if (!Array.isArray(accounts) || String(accounts[0]).toLowerCase() !== value.address.toLowerCase() || typeof chain !== 'string' || Number.parseInt(chain, 16) !== value.chainId) {
+          await api('logout', {});
+          if (mounted && started === revision.current) setNotice('The saved wallet differs from MetaMask or is locked. Sign in again before binding X.');
+          return;
+        }
+        change.current(value);
+      } finally { if (mounted && started === revision.current) setWorking(false); }
+    }).catch(error => { if (mounted && started === revision.current && diagnosticCode(error) !== 'PQ_SESSION') setNotice('No wallet session restored. Use Login MetaMask to sign in.'); });
     return () => { mounted = false; window.removeEventListener('eip6963:announceProvider', announced); };
   }, []);
   async function signOut(reason = 'Signed out. Your saved X binding is retained.') {
@@ -48,8 +67,7 @@ export default function WalletLogin({ wallet, onChange, disabled }: { wallet: Si
   }
   useEffect(() => {
     if (!wallet) return;
-    const injected = (window as Window & { ethereum?: Provider & { providers?: Provider[] } }).ethereum;
-    const selected = provider.current ?? injected?.providers?.find(item => item.isMetaMask) ?? (injected?.isMetaMask ? injected : null);
+    const selected = metaMask(provider.current);
     let valid = true;
     const changed = () => { if (valid) { valid = false; void signOut('Wallet account or network changed. Sign in again before binding X.'); } };
     selected?.on?.('accountsChanged', changed); selected?.on?.('chainChanged', changed); selected?.on?.('disconnect', changed);
@@ -61,8 +79,7 @@ export default function WalletLogin({ wallet, onChange, disabled }: { wallet: Si
   async function login() {
     if (working || disabled) return;
     if (logoutFailed) { await signOut(); return; }
-    const injected = (window as Window & { ethereum?: Provider & { providers?: Provider[] } }).ethereum;
-    const selected = provider.current ?? injected?.providers?.find(item => item.isMetaMask) ?? (injected?.isMetaMask ? injected : null);
+    const selected = metaMask(provider.current);
     if (!selected) { setNotice('Install MetaMask in desktop Chrome or Edge, then reload.'); return; }
     provider.current = selected;
     revision.current++;

@@ -4,12 +4,14 @@ import { mkdirSync } from 'node:fs';
 
 // Synthetic MetaMask provider; real ECDSA signatures and actual auth routes.
 // No successful Primus attestation or X binding is simulated.
-async function walletBrowser(page: Page, reject = false) {
+async function walletBrowser(page: Page, reject = false, changeOnReload = false) {
   const signer = Wallet.createRandom();
   await page.exposeFunction('pqFixtureSign', (hex: string) => signer.signMessage(utils.arrayify(hex)));
-  await page.addInitScript(({ address, reject }) => {
+  await page.addInitScript(({ address, reject, changeOnReload }) => {
     const listeners = new Map<string, Set<(...args: unknown[]) => void>>();
-    let accounts = [address];
+    const restored = sessionStorage.getItem('pq-fixture-loaded') === '1';
+    sessionStorage.setItem('pq-fixture-loaded', '1');
+    let accounts = [changeOnReload && restored ? '0x2222222222222222222222222222222222222222' : address];
     const provider = {
       isMetaMask: true,
       request: async ({ method, params }: { method: string; params?: unknown[] }) => {
@@ -29,7 +31,7 @@ async function walletBrowser(page: Page, reject = false) {
     window.addEventListener('message', event => {
       if (event.data?.name === 'initAttestation') window.postMessage({ target: 'padoZKAttestationJSSDK', name: 'initAttestationRes', params: { result: true, data: { padoExtensionVersion: 'fixture' } } }, '*');
     });
-  }, { address: signer.address, reject });
+  }, { address: signer.address, reject, changeOnReload });
   await page.route('**/api/poc/config', route => route.fulfill({ json: { appId: 'synthetic-app' } }));
   await page.goto('/');
   return signer;
@@ -88,6 +90,17 @@ test('changing accounts during X verification cancels progression and requires a
   await expect(page.locator('.cancel-notice')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Reset connection & retry' })).toBeEnabled();
   await expect(page.locator('.success-receipt')).toHaveCount(0);
+  // Local cancellation is immediate; server revocation has its own network RTT.
+  await expect(page.getByRole('button', { name: 'Login MetaMask' })).toBeEnabled();
+  expect(await (await page.request.get('/api/poc/wallet/session')).json()).toEqual({ address: null });
+});
+test('reload never restores a saved login for a different MetaMask account', async ({ page }) => {
+  await walletBrowser(page, false, true);
+  await page.getByRole('button', { name: 'Login MetaMask' }).click();
+  await expect(page.getByRole('button', { name: 'Verify & bind X' })).toBeEnabled();
+  await page.reload();
+  await expect(page.locator('.wallet-notice')).toContainText('saved wallet differs');
+  await expect(page.getByRole('button', { name: 'Verify & bind X' })).toHaveCount(0);
   expect(await (await page.request.get('/api/poc/wallet/session')).json()).toEqual({ address: null });
 });
 test('wallet login waits for configuration cookie bootstrap to finish', async ({ page }) => {

@@ -18,7 +18,7 @@ The server constructs the complete SIWE message. It fixes domain/URI to the guar
 
 The resulting one-hour opaque session uses a fresh random Secure/HttpOnly/SameSite=Strict cookie in production. Authentication records and the active login pointer live in shared Redis. Activation checks a pending login generation atomically; an old/superseded challenge cannot activate after sign-out. Each browser session has one active wallet login. Sign-out clears the pending generation before the active pointer so an in-flight signature response cannot resurrect a logged-out session. Old auth records are inaccessible after replacement and expire automatically.
 
-Account/network changes or provider disconnect invalidate the UI identity and revoke the server session. They cancel local proof progression immediately. Session expiry also signs out. If revocation cannot be confirmed, the UI says so and asks the user to retry sign-out. The API independently checks the active wallet session: frontend wallet state is never authentication.
+Account/network changes or provider disconnect invalidate the UI identity and revoke the server session. They cancel local proof progression immediately. Session expiry also signs out. On reload, the saved session is exposed to the UI only after MetaMask reports the same current account and chain; a locked, missing or different wallet requires a new sign-in. If revocation cannot be confirmed, the UI says so and asks the user to retry sign-out. The API independently checks the active wallet session: frontend wallet state is never authentication.
 
 ## Binding and replay protection
 
