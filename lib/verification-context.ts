@@ -54,11 +54,11 @@ export type VerificationContext = ReturnType<typeof context>;
 export function setSession(response: NextResponse, ctx: VerificationContext) {
   response.cookies.set(sessionCookieName, ctx.session, { httpOnly: true, secure: ctx.secure, sameSite: 'strict', path: '/api/poc', maxAge: 3600 });
 }
-export async function rateLimit(ctx: VerificationContext, action: 'config' | 'request' | 'verify' | 'cancel') {
+export async function rateLimit(ctx: VerificationContext, action: 'config' | 'request' | 'verify' | 'cancel' | 'wallet') {
   // Request caps are abuse protection, not proof credits. Cooldown refusals
   // must not consume the hourly allowance. Cancellation releases only the
   // session cooldown, never the hard abuse cap.
-  const limits = { config: [120, 120], request: [30, 60], verify: [30, 60], cancel: [120, 180] } as const;
+  const limits = { config: [120, 120], request: [30, 60], verify: [30, 60], cancel: [120, 180], wallet: [180, 300] } as const;
   const [sessionLimit, ipLimit] = limits[action];
   if (action === 'request') await ctx.store.limit(`cooldown:${ctx.sessionHash}`, 1, 30);
   const ip = await ctx.store.limit(`ip:${action}:${ctx.ipHash}`, ipLimit, 3600);

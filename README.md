@@ -2,9 +2,9 @@
 
 Verify Actions. Earn Trust. Unlock Rewards.
 
-Independent community experiment verifying X account ownership with the official Primus zkTLS SDK. **Public verification is enabled at [proofquest-nu.vercel.app](https://proofquest-nu.vercel.app/), with Redis-backed one-time attempts and browser-session binding. A genuine public proof was user-confirmed on 2026-11-23. Wallet authentication and reward claims remain disabled.**
+Independent community experiment verifying X account ownership with the official Primus zkTLS SDK. **Public verification is enabled at [proofquest-nu.vercel.app](https://proofquest-nu.vercel.app/), with Redis-backed one-time attempts and browser-session binding. A genuine public proof was user-confirmed on 2026-11-23. MetaMask SIWE login and verified X screen-name binding are available. Reward claims remain disabled.**
 
-[Source code](https://github.com/nhattung99/proofquest) · [Public verification setup](docs/PUBLIC_VERIFICATION.md)
+[MetaMask login and X binding](docs/WALLET_BINDING.md) · [Source code](https://github.com/nhattung99/proofquest) · [Public verification setup](docs/PUBLIC_VERIFICATION.md)
 
 ## Run on Windows
 
@@ -27,7 +27,7 @@ npm run dev
 
 Open [the local harness](http://127.0.0.1:3000), select Generate real proof, and complete the X login/verification in Primus. ProofQuest never asks for X passwords or cookies. The proof discloses `screen_name`; the application suppresses upstream SDK console logs and optional telemetry in its webpack bundle; browser Network tools and extension diagnostics can still reveal data. There is no wallet transaction or gas spend in this chosen flow, but proofs may consume your Primus application quota.
 
-The server independently calls the official `verifyAttestation`, checks freshness, recipient, and signed challenge. A successful screen reports authenticity/binding and mandatory source/resolver policy. It always reports `rewardsEnabled: false`. This is not wallet authentication, a public signing service, or a complete quest claim implementation. Refresh/restart invalidates some local attempts; wait 30 seconds between requests.
+The server independently calls the official `verifyAttestation`, checks freshness, recipient, and signed challenge. A successful screen reports authenticity/binding and mandatory source/resolver policy. It always reports `rewardsEnabled: false`. Anonymous proofs do not authenticate a wallet. Login MetaMask and select Verify & bind X to generate a new wallet-addressed proof; this is not a complete quest claim implementation. Refresh/restart invalidates some local attempts; wait 30 seconds between requests.
 
 ## Checks
 
@@ -46,13 +46,13 @@ See [research](docs/PRIMUS_RESEARCH.md), [integration](docs/PRIMUS_INTEGRATION.m
 
 The approved public Vercel release supports real X verification through the Primus extension. Configure the required server-only variables and shared Redis before enabling public mode; local mode alone uses in-memory state. The deployed Redis path has passed live session, atomic-consume, replay, cooldown and origin-negative checks. The user confirmed a real public VERIFIED receipt. Anonymous session binding does not authenticate wallet ownership or unique humanity; no rewards/claims are implemented.
 
-Changes to main auto-deploy through Vercel. Publishing still requires the owner's authorization. Full wallet auth, identity policy, atomic reward ledger and further dashboard work remain separate milestones.
+Changes to main auto-deploy through Vercel. Publishing still requires the owner's authorization. Immutable X user identity, an atomic reward ledger and further dashboard work remain separate milestones. See [MetaMask login and X binding](docs/WALLET_BINDING.md).
 
 ## Fix and polish follow-up
 
 Next.js and eslint-config-next are pinned to 16.4.6. The existing one-page app now has extension status, a four-step journey, progress/cancel controls, dismissible errors with copyable codes, and a server-gated receipt with SHA-256 fingerprint and timestamp. No receipt is shown on SDK success alone. No rewards or public claims were enabled.
 
-The legacy plaintext check accepted only empty conditions. It now supports the official REVEAL_STRING representation for the confirmed field/path while rejecting hashes, comparisons, unexpected fields and nonempty values. The live mismatch was traced to the signed reveal_id=screen_name property. Final policy validates it explicitly. A genuine user-run proof passed the backend on 2026-11-23, with supported checks accepted and HTTP 200. Wallet authentication and durable cross-user/replay claim protection remain unvalidated; rewards stay disabled.
+The legacy plaintext check accepted only empty conditions. It now supports the official REVEAL_STRING representation for the confirmed field/path while rejecting hashes, comparisons, unexpected fields and nonempty values. The live mismatch was traced to the signed reveal_id=screen_name property. Final policy validates it explicitly. A genuine user-run proof passed the backend on 2026-11-23, with supported checks accepted and HTTP 200. That historical run did not test the later wallet-authentication feature; durable reward-claim protection remains unvalidated; rewards stay disabled.
 
 Development: `npm run dev` at port 3000. Local production QA can run separately by setting `PROOFQUEST_DIST_DIR=.next-production`, running `npm run build`, then `npm run start -- --port 3200` with the same environment setting. Never deploy this localhost harness as a reward service.
 

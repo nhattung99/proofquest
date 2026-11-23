@@ -1,3 +1,5 @@
+> Current wallet feature: MetaMask SIWE login and verified X screen-name binding are documented in [WALLET_BINDING.md](WALLET_BINDING.md). Earlier wallet-disabled notes below describe historical releases. Rewards remain disabled.
+
 # Public X verification — deployed
 
 Public verification is enabled at https://proofquest-nu.vercel.app after the owner's explicit push/deploy approval. Application commit e114cff passed CI and Vercel reached READY. Live Redis/session/rate-limit checks passed, and the user confirmed a genuine public X VERIFIED receipt. Further main-branch pushes auto-deploy, so release changes still require owner authorization.

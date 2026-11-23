@@ -4,17 +4,48 @@ import type { Attempt } from './policy';
 export class ServiceError extends Error {
   constructor(public code: string, public status: number, public retryAfter = 0) { super(code); }
 }
-export type StoredAttempt = Attempt & { sessionHash: string };
+export type StoredAttempt = Attempt & { sessionHash: string; walletSessionId?: string };
 export type RateWindow = { remaining: number; resetAt: number };
+export type WalletLink = { wallet: string; screenName: string; attestationHash: string; timestamp: number };
 export interface VerificationStore {
   save(token: string, attempt: StoredAttempt): Promise<void>;
   take(token: string, sessionHash: string): Promise<StoredAttempt | null>;
   limit(key: string, maximum: number, seconds: number): Promise<RateWindow>;
   clearCooldown(sessionHash: string): Promise<void>;
+  activateWallet(generationKey: string, generation: string, activeKey: string, id: string, auth: unknown): Promise<void>;
+  getData(key: string): Promise<unknown>;
+  setData(key: string, value: unknown, ttl: number): Promise<void>;
+  takeData(key: string, sessionHash: string): Promise<unknown>;
+  deleteData(key: string): Promise<void>;
+  bindWallet(authKey: string, sessionHash: string, walletKey: string, nameKey: string, proofKey: string, link: WalletLink): Promise<void>;
 }
 // One Lua command owns the session comparison and consume. No GET/DEL race.
 export const TAKE_SCRIPT = `local raw=redis.call('GET',KEYS[1]); if not raw then return nil end; local a=cjson.decode(raw); if a.sessionHash~=ARGV[1] then return nil end; redis.call('DEL',KEYS[1]); return raw`;
 export const LIMIT_SCRIPT = `local n=redis.call('INCR',KEYS[1]); if n==1 then redis.call('EXPIRE',KEYS[1],ARGV[1]) end; return {n,redis.call('TTL',KEYS[1])}`;
+// Authentication, uniqueness and replay checks share the same atomic commit.
+export const ACTIVATE_SCRIPT = `
+local generation = redis.call('GET', KEYS[1])
+if not generation or cjson.decode(generation) ~= ARGV[1] then return 'PQ_WALLET_NONCE' end
+redis.call('DEL', KEYS[1])
+redis.call('SET', KEYS[2], ARGV[2], 'EX', 3600)
+redis.call('SET', KEYS[3], ARGV[3], 'EX', 3600)
+return 'OK'`;
+export const BIND_SCRIPT = `
+if redis.call('GET', KEYS[5]) ~= ARGV[3] then return 'PQ_WALLET_SESSION' end
+local raw = redis.call('GET', KEYS[1])
+if not raw then return 'PQ_WALLET_SESSION' end
+local auth = cjson.decode(raw)
+local link = cjson.decode(ARGV[2])
+if auth.expiresAt <= tonumber(ARGV[4]) or auth.sessionHash ~= ARGV[1] or string.lower(auth.address) ~= string.lower(link.wallet) then return 'PQ_WALLET_SESSION' end
+local wallet = redis.call('GET', KEYS[2])
+local name = redis.call('GET', KEYS[3])
+if wallet and string.lower(cjson.decode(wallet).screenName) ~= string.lower(link.screenName) then return 'PQ_BIND_CONFLICT' end
+if name and string.lower(cjson.decode(name).wallet) ~= string.lower(link.wallet) then return 'PQ_BIND_CONFLICT' end
+if redis.call('EXISTS', KEYS[4]) == 1 then return 'PQ_REPLAY' end
+redis.call('SET', KEYS[2], ARGV[2])
+redis.call('SET', KEYS[3], ARGV[2])
+redis.call('SET', KEYS[4], '1', 'EX', 86400)
+return 'OK'`;
 
 export class RedisVerificationStore implements VerificationStore {
   constructor(private endpoint: string, private token: string, private prefix: string) {
@@ -38,7 +69,7 @@ export class RedisVerificationStore implements VerificationStore {
     if (!/^[a-f0-9]{64}$/.test(token)) return null;
     const raw = await this.command(['EVAL', TAKE_SCRIPT, 1, `${this.prefix}:attempt:${token}`, sessionHash]);
     if (raw === null) return null;
-    const schema = z.object({ recipient: z.string(), challenge: z.string(), createdAt: z.number(), expiresAt: z.number(), sessionHash: z.string() }).strict();
+    const schema = z.object({ recipient: z.string(), challenge: z.string(), createdAt: z.number(), expiresAt: z.number(), sessionHash: z.string(), walletSessionId: z.string().regex(/^[a-f0-9]{64}$/).optional() }).strict();
     try { return schema.parse(JSON.parse(z.string().parse(raw))); }
     catch { throw new ServiceError('PQ_STORAGE', 503); }
   }
@@ -50,12 +81,36 @@ export class RedisVerificationStore implements VerificationStore {
     return { remaining: maximum - result.data[0], resetAt: Date.now() + Math.max(1, result.data[1]) * 1000 };
   }
   async clearCooldown(sessionHash: string) { await this.command(['DEL', `${this.prefix}:limit:cooldown:${sessionHash}`]); }
+  async activateWallet(generationKey: string, generation: string, activeKey: string, id: string, auth: unknown) {
+    const result = await this.command(['EVAL', ACTIVATE_SCRIPT, 3, this.dataKey(generationKey), this.dataKey(`auth:${id}`), this.dataKey(activeKey), generation, JSON.stringify(auth), JSON.stringify(id)]);
+    if (result !== 'OK') throw new ServiceError(result === 'PQ_WALLET_NONCE' ? 'PQ_WALLET_NONCE' : 'PQ_STORAGE', result === 'PQ_WALLET_NONCE' ? 401 : 503);
+  }
+  private dataKey(key: string) { return `${this.prefix}:identity:${key}`; }
+  async getData(key: string) {
+    const raw = await this.command(['GET', this.dataKey(key)]);
+    if (raw === null) return null;
+    try { return JSON.parse(z.string().parse(raw)) as unknown; } catch { throw new ServiceError('PQ_STORAGE', 503); }
+  }
+  async setData(key: string, value: unknown, ttl: number) {
+    if (await this.command(['SET', this.dataKey(key), JSON.stringify(value), 'EX', ttl]) !== 'OK') throw new ServiceError('PQ_STORAGE', 503);
+  }
+  async takeData(key: string, sessionHash: string) {
+    const raw = await this.command(['EVAL', TAKE_SCRIPT, 1, this.dataKey(key), sessionHash]);
+    if (raw === null) return null;
+    try { return JSON.parse(z.string().parse(raw)) as unknown; } catch { throw new ServiceError('PQ_STORAGE', 503); }
+  }
+  async deleteData(key: string) { await this.command(['DEL', this.dataKey(key)]); }
+  async bindWallet(authKey: string, sessionHash: string, walletKey: string, nameKey: string, proofKey: string, link: WalletLink) {
+    const result = await this.command(['EVAL', BIND_SCRIPT, 5, ...[authKey, walletKey, nameKey, proofKey, `active:${sessionHash}`].map(key => this.dataKey(key)), sessionHash, JSON.stringify(link), JSON.stringify(authKey.slice(5)), Date.now()]);
+    if (result !== 'OK') throw new ServiceError(['PQ_WALLET_SESSION', 'PQ_BIND_CONFLICT', 'PQ_REPLAY'].includes(String(result)) ? String(result) : 'PQ_STORAGE', result === 'PQ_WALLET_SESSION' ? 401 : ['PQ_BIND_CONFLICT', 'PQ_REPLAY'].includes(String(result)) ? 409 : 503);
+  }
 }
 
 // Local development only. Public configuration never falls back to this store.
 export class MemoryVerificationStore implements VerificationStore {
   private attempts = new Map<string, StoredAttempt>();
   private counters = new Map<string, { count: number; expires: number }>();
+  private data = new Map<string, { value: unknown; expires: number }>();
   async save(token: string, attempt: StoredAttempt) {
     for (const [key, item] of this.attempts) if (item.expiresAt < Date.now()) this.attempts.delete(key);
     this.attempts.set(token, attempt);
@@ -75,6 +130,37 @@ export class MemoryVerificationStore implements VerificationStore {
     return { remaining: maximum - value.count, resetAt: value.expires };
   }
   async clearCooldown(sessionHash: string) { this.counters.delete(`cooldown:${sessionHash}`); }
+  async activateWallet(generationKey: string, generation: string, activeKey: string, id: string, auth: unknown) {
+    const pending = this.data.get(generationKey);
+    if (!pending || pending.expires <= Date.now() || pending.value !== generation) throw new ServiceError('PQ_WALLET_NONCE', 401);
+    this.data.delete(generationKey);
+    this.data.set(`auth:${id}`, { value: structuredClone(auth), expires: Date.now() + 3600000 });
+    this.data.set(activeKey, { value: id, expires: Date.now() + 3600000 });
+  }
+  async getData(key: string) {
+    const item = this.data.get(key);
+    if (!item || item.expires <= Date.now()) { this.data.delete(key); return null; }
+    return structuredClone(item.value);
+  }
+  async setData(key: string, value: unknown, ttl: number) { this.data.set(key, { value: structuredClone(value), expires: Date.now() + ttl * 1000 }); }
+  async takeData(key: string, sessionHash: string) {
+    const item = this.data.get(key);
+    if (!item || item.expires <= Date.now() || (item.value as { sessionHash?: string }).sessionHash !== sessionHash) return null;
+    this.data.delete(key); return structuredClone(item.value);
+  }
+  async deleteData(key: string) { this.data.delete(key); }
+  async bindWallet(authKey: string, sessionHash: string, walletKey: string, nameKey: string, proofKey: string, link: WalletLink) {
+    // No await between reads and writes: same atomic semantics as the Lua adapter.
+    const read = (key: string) => { const item = this.data.get(key); return item && item.expires > Date.now() ? item.value : null; };
+    const auth = read(authKey) as { sessionHash: string; address: string; expiresAt: number } | null;
+    if (!auth || auth.expiresAt <= Date.now() || read(`active:${sessionHash}`) !== authKey.slice(5) || auth.sessionHash !== sessionHash || auth.address.toLowerCase() !== link.wallet.toLowerCase()) throw new ServiceError('PQ_WALLET_SESSION', 401);
+    const wallet = read(walletKey) as WalletLink | null; const name = read(nameKey) as WalletLink | null;
+    if ((wallet && wallet.screenName.toLowerCase() !== link.screenName.toLowerCase()) || (name && name.wallet.toLowerCase() !== link.wallet.toLowerCase())) throw new ServiceError('PQ_BIND_CONFLICT', 409);
+    if (read(proofKey)) throw new ServiceError('PQ_REPLAY', 409);
+    this.data.set(walletKey, { value: structuredClone(link), expires: Infinity });
+    this.data.set(nameKey, { value: structuredClone(link), expires: Infinity });
+    this.data.set(proofKey, { value: true, expires: Date.now() + 86400000 });
+  }
 }
 const state = globalThis as typeof globalThis & { proofquestLocalStore?: MemoryVerificationStore };
 export function verificationStore(publicMode: boolean, namespace: string) {

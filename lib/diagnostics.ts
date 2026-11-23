@@ -1,5 +1,11 @@
 // Never display arbitrary SDK/server messages: they may contain account data.
 const safeMessages: Record<string, string> = {
+  PQ_WALLET_LOGIN: 'Wallet sign-in failed. Unlock MetaMask and request a new sign-in message.',
+  PQ_WALLET_NONCE: 'This sign-in request expired or was already used. Sign in again.',
+  PQ_WALLET_SIGNATURE: 'The wallet signature did not match this sign-in request. Select the intended account and sign in again.',
+  PQ_WALLET_SESSION: 'Your wallet session changed or expired. Sign in again, then generate a new X binding proof.',
+  PQ_BIND_CONFLICT: 'This wallet or X screen name already has a different binding. No existing binding was overwritten. Contact support to review it.',
+  PQ_REPLAY: 'This proof was already used for binding. Generate a new proof.',
   PQ_CONFIG: 'Verification is not configured yet. Please contact the developer.',
   PQ_SESSION: 'Your verification session expired. Reload the page and try again.',
   PQ_ORIGIN: 'Verification must be started on the configured ProofQuest website.',

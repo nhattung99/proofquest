@@ -4,6 +4,8 @@ import { z } from 'zod';
 import { attestationSchema, checkBinding, checkQuest, type Attempt } from './policy';
 import { X_QUEST } from './x-quest';
 import { type VerificationContext } from './verification-context';
+import { persistWalletLink, walletSession, type WalletSession } from './wallet-auth';
+import { ServiceError } from './verification-store';
 export { guard } from './verification-context';
 
 export const cookieName = 'proofquest_poc';
@@ -13,24 +15,30 @@ export function configuration() {
     templateId: process.env.PRIMUS_TEMPLATE_ID, recipient: process.env.PRIMUS_RECIPIENT,
   });
 }
-export async function issueAttempt(ctx: VerificationContext) {
+export async function issueAttempt(ctx: VerificationContext, wallet?: WalletSession) {
   const config = configuration();
   const now = Date.now();
   const token = randomBytes(32).toString('hex');
   const sdk = new PrimusZKTLS();
   await sdk.init(config.appId, config.appSecret);
   const challenge = JSON.stringify({ purpose: 'proofquest-local-poc-v1', questId: X_QUEST.id, policyVersion: 1, nonce: randomBytes(32).toString('hex'), templateId: config.templateId });
-  const request = sdk.generateRequestParams(config.templateId, config.recipient);
+  const recipient = wallet?.address ?? config.recipient;
+  const request = sdk.generateRequestParams(config.templateId, recipient);
   request.setAdditionParams(challenge);
   request.setAttMode({ algorithmType: 'proxytls' });
   const signedRequest = await sdk.sign(request.toJsonString());
-  await ctx.store.save(token, { recipient: config.recipient, challenge, createdAt: now, expiresAt: now + 300_000, sessionHash: ctx.sessionHash });
+  await ctx.store.save(token, { recipient, challenge, createdAt: now, expiresAt: now + 300_000, sessionHash: ctx.sessionHash, ...(wallet ? { walletSessionId: wallet.id } : {}) });
   return { token, signedRequest };
 }
-export async function verifyAttempt(token: string, input: unknown, ctx: VerificationContext) {
+export async function verifyAttempt(token: string, input: unknown, ctx: VerificationContext, walletToken = '') {
   const attempt = await ctx.store.take(token, ctx.sessionHash);
   if (!attempt) throw new Error('Unknown or already consumed attempt');
-  return verifyPayload(attempt, input);
+  const auth = attempt.walletSessionId ? await walletSession(ctx, walletToken) : null;
+  if (attempt.walletSessionId && (!auth || auth.id !== attempt.walletSessionId || auth.address.toLowerCase() !== attempt.recipient.toLowerCase())) throw new ServiceError('PQ_WALLET_SESSION', 401);
+  const result = verifyPayload(attempt, input);
+  if (!auth) return result;
+  await persistWalletLink(ctx, auth, { wallet: auth.address, screenName: result.screenName, attestationHash: result.attestationHash, timestamp: result.timestamp });
+  return { ...result, walletAuthenticated: true, walletAddress: auth.address, walletBound: true };
 }
 export function verifyPayload(attempt: Attempt, input: unknown) {
   const attestation = attestationSchema.parse(input);
