@@ -29,3 +29,100 @@ ol.journey,ol.live-timeline,section.explainer ol{list-style-type:none}ol.journey
 @media(max-width:600px){.home-hub{padding:25px 0 22px}.hub-heading{margin-bottom:18px}.hub-heading h1{font-size:32px;letter-spacing:-1.2px;max-width:330px}.hub-grid{grid-template-columns:1fr;gap:16px}.hub-card h2{font-size:25px}.hub-card p{font-size:12px;margin-bottom:17px}.hub-card .eyebrow{font-size:9px}.hub-action{width:100%;justify-content:space-between}.hub-tab-note{align-self:center;margin-top:9px}}
 
 @media(max-width:360px){.site-header .nav-verify{display:none}}
+
+/* Presentation-only neon skin. Verification/authentication state is unchanged. */
+:root{background:#08090c;--orange:#ff6900;--muted:#a3a4ac;--border:#38343a;color:#f4f3f7}
+body{position:relative;isolation:isolate;background:radial-gradient(ellipse at 48% 0,#40201455,transparent 38%),radial-gradient(ellipse at 100% 45%,#67200024,transparent 38%),#08090c}
+body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background:url('/art/ambient-wave.svg') center bottom/cover no-repeat;opacity:.65}
+main,.site-header,.site-footer{position:relative;z-index:1;max-width:1800px}
+main{padding:0 clamp(24px,3vw,50px)}
+.site-header{height:80px;padding:0 clamp(24px,3vw,50px);background:linear-gradient(105deg,#08090ddd,#100b10dd);border-bottom-color:#6c351c66}
+.wordmark{font-size:30px;letter-spacing:-1.2px;white-space:nowrap}
+.brand-icon{width:52px;height:56px;margin-right:14px;border-radius:15px;background:linear-gradient(145deg,#ffa31c,#ff5800 65%);box-shadow:inset 0 1px 2px #ffe2a166,0 0 24px #ff620026}
+.brand-icon svg{width:31px;height:31px}
+.beta{font-size:13px;padding:6px 10px;margin-left:18px;border:1px solid #c9c2bd;border-radius:9px;color:#eee;box-shadow:inset 0 1px 5px #ffffff15,0 2px 8px #ff76001a;letter-spacing:1.2px}
+.site-header nav{gap:30px;font-size:16px;color:#eeecf0}
+.nav-verify{padding:13px 21px;border:1px solid #a74a09;border-radius:12px;background:linear-gradient(130deg,#281609,#0e0c0c);box-shadow:inset 0 1px 10px #fa740019,0 0 15px #ff65000a;color:#ffb760}
+.nav-verify svg{width:21px;height:21px}
+.wallet-button{display:flex;align-items:center;gap:7px;padding:12px 17px;font-size:15px;font-weight:600;border-color:#ed742e;border-radius:13px;color:#f5eeee;background:linear-gradient(120deg,#291307,#1b0d15);box-shadow:inset 0 0 11px #ff710016,1px 1px 7px #f24f5230}
+.wallet-button::before{content:"";width:24px;height:24px;background:url('/art/wallet-mark.svg') center/contain no-repeat;flex-shrink:0}
+.wallet-button:disabled{box-shadow:none;opacity:.55}
+.wallet-notice{top:54px;background:#17141b;border-color:#9c512b;font-size:13px}
+.home-hub{position:relative;isolation:isolate;padding:27px 0 24px}
+.hub-heading{position:relative;z-index:2;display:flex;justify-content:space-between;align-items:center;gap:24px;min-height:58px;margin:0 0 24px}
+.hub-heading .eyebrow{font-size:12px;letter-spacing:1.8px;color:#f0edf1}
+.hub-heading .live-dot{width:10px;height:10px;box-shadow:0 0 13px #ff730070}
+.hub-heading h1{font-size:clamp(28px,2.45vw,40px);letter-spacing:-1.4px;line-height:1.15;margin:0;white-space:nowrap;text-shadow:0 2px 10px #000a}
+.hub-heading h1>span{position:relative;color:#ff760a;text-shadow:0 2px 18px #ff5a0026}
+.hub-heading h1>span::after{content:"";position:absolute;left:0;right:0;bottom:-9px;height:2px;background:linear-gradient(90deg,transparent,#ff7a0e,transparent);box-shadow:0 2px 10px #ff65005c}
+.hub-shield{position:absolute;z-index:1;left:50%;top:-63px;transform:translateX(-50%);width:280px;height:194px;background:url('/art/shield.webp') center/contain no-repeat;pointer-events:none;filter:drop-shadow(0 0 18px #ff690019)}
+.hub-grid{position:relative;z-index:2;gap:26px}
+.hub-card{padding:25px 30px;min-height:254px;border:1px solid #c26820;border-radius:26px;background:radial-gradient(ellipse at 80% 100%,#8d310025,transparent 65%),linear-gradient(115deg,#2e1d17dd,#11131bd9 70%);box-shadow:inset 0 1px 1px #ffd3897a,inset 0 -1px 2px #ff6a0044,0 10px 40px #0004;overflow:hidden;isolation:isolate;transition:transform .2s,border-color .2s,box-shadow .2s}
+.hub-card::before{content:"";position:absolute;inset:0;border-radius:inherit;background:radial-gradient(ellipse at 50% 0,#ff7d2526,transparent 34%);box-shadow:inset 0 0 28px #ff58000a;pointer-events:none}
+.hub-card::after{content:"";position:absolute;top:0;left:15%;right:15%;height:1px;background:linear-gradient(90deg,transparent,#ffc09d,#ff723e,transparent);box-shadow:0 0 12px 2px #ff763b55;pointer-events:none}
+.hub-card:hover{transform:translateY(-3px);border-color:#ff9c28;background:radial-gradient(ellipse at 80% 100%,#94340033,transparent 65%),linear-gradient(115deg,#352018ee,#14151df0 70%);box-shadow:inset 0 1px 1px #ffe0ab99,0 0 25px #f66b0020,0 16px 36px #0006}
+.hub-card>*{position:relative;z-index:2}
+.hub-card-heading{gap:12px;max-width:60%}
+.hub-card-heading .eyebrow{font-size:12px;letter-spacing:1.5px;color:#c4c1c2}
+.hub-symbol{width:34px;height:34px;border-color:#b66a2680;background:#291e12aa;color:#ffa343;border-radius:10px;box-shadow:inset 0 0 8px #ff670013}
+.hub-card h2{font-size:32px;letter-spacing:-1px;line-height:1.15;margin:16px 0 10px;max-width:62%;text-shadow:0 2px 14px #0008}
+.hub-card p{font-size:14px;line-height:1.55;color:#d3cfd0;max-width:59%;margin-bottom:20px;text-shadow:0 2px 8px #000}
+.hub-action{gap:25px;width:auto;min-height:46px;padding:11px 22px;font-size:15px;border:1px solid #ffb026;border-radius:13px;background:linear-gradient(170deg,#ffad13 0%,#ff7300 25%,#fa4e00 100%);box-shadow:inset 0 1px 3px #ffe7a57a,0 0 16px #ff60001a;color:#fff}
+.hub-action>span{font-size:23px;line-height:1}
+.hub-card .hub-art{position:absolute;z-index:1;right:-1%;bottom:-14px;width:54%;height:100%;pointer-events:none;background-position:center bottom;background-size:contain;background-repeat:no-repeat}
+.hub-art-bind{background-image:url('/art/verify-bind.webp')}
+.hub-art-quiz{background-image:url('/art/quiz.webp')}
+.hub-tab-note{position:absolute;z-index:3;right:24px;bottom:21px;max-width:42%;margin:0;padding:3px 5px;border-radius:4px;background:#11131b55;color:#d4c9c4;font-size:10px;text-shadow:0 1px 5px #000}
+.journey{gap:16px;margin:0 0 18px;padding:0}
+.journey li{font-size:14px;gap:12px;color:#92939b}
+.step-number{width:36px;height:36px;font-size:14px;background:linear-gradient(160deg,#262329,#0a0b0f);border-color:#65616a;box-shadow:inset 0 1px 3px #ffffff14}
+.journey .current .step-number{border-color:#ff8b12;color:#ffac42;background:radial-gradient(ellipse at top,#6b310b,#211508 80%);box-shadow:0 0 13px #ff690019,inset 0 0 13px #ff8c0018}
+.journey .done .step-number{border-color:#3bb550;background:linear-gradient(145deg,#287932,#0e391a);box-shadow:0 0 10px #4ded6f16;color:#c6ffd1}
+.step-line{height:2px;background:linear-gradient(90deg,#615e63,#434146);margin-left:3px}
+.journey .done .step-line{background:linear-gradient(90deg,#69df67,#92d68b55)}
+.quest-card{border:1px solid #817478;border-radius:26px;background:radial-gradient(ellipse at 0 52%,#7c310025,transparent 42%),linear-gradient(125deg,#1e1e25ee,#11131aeb 68%);box-shadow:inset 0 1px 1px #e9dcd633,inset 0 -1px 2px #fc671a44,0 18px 55px #0005;overflow:hidden}
+.quest-card-main{gap:25px;min-height:126px;padding:26px 34px;border-bottom-color:#65555899;background:linear-gradient(95deg,#26202c30,#11131a30)}
+.quest-icon{width:70px;height:72px;border-radius:19px;border-color:#c37429;background:radial-gradient(ellipse at top,#5a2a09,#0b0b11 72%);box-shadow:inset 0 0 16px #ff690016,0 0 21px #ff69001c}
+.quest-icon .x-mark{font-size:42px}
+.quest-heading .eyebrow{font-size:10px;color:#d0cccd;letter-spacing:1.8px}
+.quest-heading h2{font-size:30px;letter-spacing:-1px;margin:8px 0 6px}
+.quest-heading p{font-size:14px;color:#bfc0cb;line-height:1.6}
+.quest-label{font-size:10px;letter-spacing:1.5px;color:#c0bbc5}
+.quest-content{gap:36px;padding:25px 34px 27px}
+.requirements{gap:30px 30px}
+.requirements>div{gap:15px}
+.requirements>div>svg{width:29px;height:29px;color:#ff9d25;filter:drop-shadow(0 0 5px #ff79001c)}
+.requirements>div>.x-mark{font-size:30px;color:#e78b67}
+.requirements>div>span:last-child{font-size:14px;color:#f4f1f4}
+.requirements small{font-size:12px;line-height:1.65;color:#b6b5c0;max-width:250px;margin-top:6px}
+.action-panel{padding-left:36px;border-left-color:#72676b99}
+.extension-pill{font-size:13px;line-height:1.6}
+.extension-pill.detected{color:#acffb6}
+.extension-pill.detected .status-dot{box-shadow:0 0 9px #40ff6a44}
+.install-link{font-size:13px;color:#ff8d20;margin-left:10px}
+.setup-text{font-size:13px;line-height:1.65;margin:12px 0 15px;min-height:0;color:#c5c1cd}
+.primary-button{font-size:18px;min-height:64px;padding:17px 22px;gap:20px;border:1px solid #ffd330;border-radius:17px;background:linear-gradient(175deg,#ffad0a,#ff7800 28%,#fb4e00 100%);box-shadow:inset 0 1px 4px #fff4a688,inset 0 -2px 6px #b9430019,0 0 3px #ffb52f,0 0 21px #ff650026}
+.primary-button:not(:disabled)::before{content:"";width:27px;height:29px;flex-shrink:0;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3l8 3v6c0 4-5 8-8 9-3-1-8-5-8-9V6l8-3z M8 12l3 3 5-6'/%3E%3C/svg%3E") center/contain no-repeat}
+.primary-button>svg{width:24px;height:24px}
+.primary-button:disabled{background:linear-gradient(#47352b,#30272b);border-color:#72523b;box-shadow:none;color:#aca4aa}
+.privacy-note{font-size:10px;color:#aaa3ae;margin-top:15px;line-height:1.65}
+.card-bottom{border-top-color:#66535c66;color:#ad9d8f;padding:15px 30px}
+.receipt-preview,.budget-note{color:#b3a9b7}
+.explainer,.faq-list,.faq-list details,.site-footer{border-color:#54404877}
+.explainer p,.faq-list p{color:#aaa4b2}
+.site-footer{padding-left:clamp(24px,3vw,50px);padding-right:clamp(24px,3vw,50px)}
+@media(min-width:1101px) and (max-height:850px){
+ .site-header{height:72px}.wordmark{font-size:26px}.brand-icon{width:43px;height:46px}.brand-icon svg{width:27px;height:27px}.site-header nav{font-size:14px;gap:24px}.wallet-button{font-size:13px;padding:10px 14px}.home-hub{padding:18px 0}.hub-heading{min-height:48px;margin-bottom:14px}.hub-heading h1{font-size:33px}.hub-shield{width:234px;height:158px;top:-47px}.hub-card{min-height:220px;padding:22px 26px}.hub-card h2{font-size:29px;margin:12px 0 9px}.hub-card p{font-size:13px;margin-bottom:17px}.hub-action{min-height:42px;font-size:13px;padding:9px 18px}.hub-card-heading .eyebrow{font-size:11px}.hub-symbol{width:30px;height:30px}.journey li{font-size:13px}.step-number{width:32px;height:32px;font-size:13px}.quest-card-main{min-height:108px;padding:22px 30px}.quest-icon{width:60px;height:62px}.quest-heading h2{font-size:27px}.quest-heading p{font-size:12px}.quest-content{padding:22px 30px;gap:30px}.requirements{gap:25px}.requirements>div>span:last-child{font-size:12px}.requirements small{font-size:11px}.primary-button{min-height:56px;font-size:16px;padding:14px 18px}.setup-text{font-size:12px;margin:9px 0 12px}.extension-pill,.install-link{font-size:12px}
+}
+@media(max-width:1100px) and (min-width:801px){
+ .site-header{height:72px}.wordmark{font-size:24px}.brand-icon{width:40px;height:43px}.brand-icon svg{width:26px;height:26px}.beta{font-size:10px;padding:5px 7px;margin-left:12px}.site-header nav{font-size:13px;gap:19px}.wallet-button{font-size:12px;padding:10px 12px}.wallet-button::before{width:21px;height:21px}.hub-heading h1{font-size:30px}.hub-shield{display:none}.hub-card{min-height:232px;padding:22px}.hub-card h2{font-size:27px}.hub-card p{font-size:12px;max-width:61%}.hub-card-heading .eyebrow{font-size:10px}.hub-action{font-size:12px;padding:10px 16px;gap:14px}.hub-tab-note{font-size:9px;right:16px;bottom:18px}.journey li{font-size:12px}.step-number{width:29px;height:29px}.quest-heading h2{font-size:26px}.quest-heading p{font-size:12px}.quest-card-main{min-height:112px;padding:24px}.quest-icon{width:57px;height:60px}.quest-content{padding:24px;gap:25px}.requirements{gap:24px 18px}.requirements>div{gap:11px}.requirements>div>span:last-child{font-size:12px}.requirements small{font-size:11px}.action-panel{padding-left:24px}.primary-button{font-size:15px;min-height:56px}.extension-pill,.install-link{font-size:11px}.setup-text{font-size:12px}
+}
+@media(max-width:800px){
+ main{padding:0 22px}.site-header{height:70px;padding:0 22px}.wordmark{font-size:23px}.brand-icon{width:38px;height:41px;margin-right:10px}.brand-icon svg{width:25px;height:25px}.beta{font-size:10px;padding:5px 7px;margin-left:10px}.site-header nav{font-size:12px;gap:15px}.wallet-button{padding:9px 11px;font-size:12px}.wallet-button::before{width:20px;height:20px}.nav-verify{padding:10px 13px}.hub-heading{display:block;min-height:0;margin-bottom:23px}.hub-heading h1{font-size:32px;margin-top:16px;white-space:normal}.hub-shield{display:none}.hub-grid{gap:18px}.hub-card{min-height:250px;padding:20px}.hub-card h2{font-size:25px;max-width:100%}.hub-card p{font-size:12px;max-width:76%}.hub-card-heading{max-width:100%;gap:9px}.hub-card-heading .eyebrow{font-size:10px}.hub-symbol{width:28px;height:28px}.hub-card .hub-art{width:70%;right:-30px;bottom:-20px;opacity:.5;mask-image:linear-gradient(90deg,transparent,#000 30%)}.hub-action{font-size:12px;padding:10px 15px;gap:20px;min-height:42px}.hub-tab-note{position:absolute;font-size:8px;right:12px;bottom:9px;max-width:46%}.journey li{font-size:11px;gap:8px}.step-number{width:28px;height:28px;font-size:12px}.quest-card-main{padding:24px;gap:17px}.quest-icon{width:56px;height:59px}.quest-heading h2{font-size:25px}.quest-heading p{font-size:12px}.quest-content{padding:24px;gap:24px}.requirements small{font-size:11px}.requirements>div>span:last-child{font-size:12px}.requirements>div>svg{width:25px;height:25px}.action-panel{padding-left:24px}.primary-button{min-height:54px;font-size:14px;padding:14px;gap:12px}.extension-pill,.install-link{font-size:11px}.setup-text{font-size:12px}
+}
+@media(max-width:600px){
+ main{padding:0 18px}.site-header{height:66px;padding:0 18px}.wordmark{font-size:22px}.brand-icon{width:36px;height:39px;margin-right:9px;border-radius:11px}.brand-icon svg{width:24px;height:24px}.site-header nav{gap:9px}.nav-verify{padding:9px 11px;font-size:12px}.nav-verify svg{width:16px;height:16px}.wallet-button{padding:9px 10px;font-size:11px;border-radius:10px}.wallet-button::before{width:19px;height:19px}.home-hub{padding:26px 0 23px}.hub-heading .eyebrow{font-size:10px}.hub-heading h1{font-size:30px;letter-spacing:-1px;max-width:100%}.hub-heading h1>span{white-space:nowrap}.hub-grid{grid-template-columns:1fr;gap:18px}.hub-card{min-height:250px;padding:22px;border-radius:22px}.hub-card h2{font-size:28px;margin:15px 0 10px;max-width:95%}.hub-card p{max-width:73%;font-size:12px;margin-bottom:18px}.hub-card .hub-art{width:65%;right:-18px;bottom:-22px;opacity:.55}.hub-action{width:auto;min-height:42px;padding:10px 17px;gap:22px;font-size:13px}.hub-tab-note{bottom:18px;right:14px;font-size:9px;max-width:41%}.journey{gap:4px;margin-bottom:16px}.journey li{font-size:9px;gap:7px}.step-number{width:27px;height:27px}.quest-card{border-radius:22px}.quest-card-main{padding:22px 20px;gap:14px;min-height:104px}.quest-icon{width:48px;height:52px;border-radius:14px}.quest-icon .x-mark{font-size:31px}.quest-heading h2{font-size:22px;letter-spacing:-.6px}.quest-heading .eyebrow{font-size:8px}.quest-heading p{font-size:10px}.quest-content{padding:22px 20px;gap:25px}.requirements{grid-template-columns:1fr 1fr;gap:24px 17px}.requirements>div{gap:10px}.requirements>div>span:last-child{font-size:11px}.requirements small{font-size:10px;line-height:1.6}.requirements>div>svg{width:23px;height:23px}.requirements>div>.x-mark{font-size:25px}.action-panel{border-left:0;border-top-color:#68525a99;padding:22px 0 0}.primary-button{font-size:15px;border-radius:13px;min-height:56px;gap:12px}.primary-button:not(:disabled)::before{width:23px;height:25px}.primary-button>svg{width:20px;height:20px}.setup-text{font-size:11px}.privacy-note{font-size:9px}.site-footer{padding:22px 18px}.hub-card p,.privacy-note{overflow-wrap:anywhere}
+}
+@media(max-width:380px){.site-header{padding:0 14px}.wordmark{font-size:20px}.brand-icon{width:32px;height:35px;margin-right:8px}.wallet-button{font-size:10px;padding:8px 9px;gap:5px}.wallet-button::before{width:17px;height:17px}.hub-card h2{font-size:26px}.hub-tab-note{font-size:8px}.hub-heading h1{font-size:28px}}
+@media(max-width:600px){.site-header .nav-verify{display:none}}
+@media(max-width:900px){.site-header nav>a:not(.nav-verify){display:none}}
